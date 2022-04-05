@@ -43,4 +43,16 @@ sudo apt-get mosquitto
 
 ### MQTT Explorer
 
-...
+### Arduino Development
+
+arduino-cli: <https://arduino.github.io/arduino-cli/0.21/commands/arduino-cli_config_set/>
+
+```powershell
+.\arduino-cli.exe config set network.proxy https://webproxy.bs.ptb.de:8080
+
+# Arduino Nano 33 IoT requirement
+.\arduino-cli.exe core install arduino:samd
+
+# WifiNINA, LSM6DS3 Accelerometer, MQTT libraries
+.\arduino-cli.exe lib install WiFiNINA Arduino_LSM6DS3 ArduinoMqttClient
+```
