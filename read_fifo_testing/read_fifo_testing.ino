@@ -72,6 +72,7 @@ void loop()
   float acc_y;
   float acc_z;
 
+  float data[IMU.settings.fifoThreshold][4];
   uint16_t tempUnsigned;
 
   // Wait for watermark
@@ -105,27 +106,29 @@ void loop()
 
   while ((IMU.fifoGetStatus() & 0x1000) == 0)
   {
-
     // ts = (float)i / empirical_odr;  // time delta to time_watermark in [s]
     ts = time_watermark + (float)time_index / empirical_odr; // "absolute time" [s]
     acc_x = IMU.calcAccel(IMU.fifoRead());
     acc_y = IMU.calcAccel(IMU.fifoRead());
     acc_z = IMU.calcAccel(IMU.fifoRead());
 
-    Serial.print(time_index);
-    Serial.print(",");
-    Serial.print(ts);
-    Serial.print(",");
-    Serial.print(acc_x);
-    Serial.print(",");
-    Serial.print(acc_y);
-    Serial.print(",");
-    Serial.print(acc_z);
-    Serial.print("\n");
+    data[sample_index][0] = ts;
+    data[sample_index][1] = acc_x;
+    data[sample_index][2] = acc_y;
+    data[sample_index][3] = acc_z;
+
+    // Serial.print(ts);
+    // Serial.print(",");
+    // Serial.print(acc_x);
+    // Serial.print(",");
+    // Serial.print(acc_y);
+    // Serial.print(",");
+    // Serial.print(acc_z);
+    // Serial.print("\n");
+    // delay(10); // Wait for the serial buffer to clear (~50 bytes worth of time @ 57600baud)
 
     time_index++;
     sample_index++;
-    delay(10); // Wait for the serial buffer to clear (~50 bytes worth of time @ 57600baud)
   }
 
   // prepare next loop-cycle
