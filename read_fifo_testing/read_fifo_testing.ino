@@ -80,7 +80,7 @@ void loop()
   };
 
   // get time when the watermark was reached
-  time_watermark = millis() / 1000;
+  time_watermark = (float)millis() / 1000;
 
   // heuristic to get proper sampling frequency / ODR
   // This is a heuristic, because difference between watermarks does not cover the same
