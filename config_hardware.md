@@ -56,3 +56,12 @@ arduino-cli: <https://arduino.github.io/arduino-cli/0.21/commands/arduino-cli_co
 # WifiNINA, LSM6DS3 Accelerometer, MQTT libraries
 .\arduino-cli.exe lib install WiFiNINA Arduino_LSM6DS3 ArduinoMqttClient
 ```
+
+path: C:\Users\gruber04\Downloads\arduino-cli_0.21.1_Windows_64bit\arduino-cli.exe
+
+compile + upload
+
+```powershell
+.\arduino-cli.exe compile -b arduino:samd:nano_33_iot .\read_fifo_testing\
+.\arduino-cli.exe upload -b arduino:samd:nano_33_iot -p COM4 .\read_fifo_testing\
+```
