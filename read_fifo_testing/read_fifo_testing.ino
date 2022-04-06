@@ -4,6 +4,11 @@
 
 LSM6DS3 IMU(I2C_MODE, 0x6A);
 
+// evaluation of actual output data rate
+float empirical_odr = 0;
+float previous_time_watermark = 0.0;
+int previous_read_samples = 0;
+
 void setup( void ) {
   //Over-ride default settings if desired
   IMU.settings.gyroEnabled = 0;  //Can be 0 or 1
@@ -12,12 +17,13 @@ void setup( void ) {
   IMU.settings.accelEnabled = 1;
   IMU.settings.accelRange = 4;      //Max G force readable.  Can be: 2, 4, 8, 16
   IMU.settings.accelSampleRate = 13;  //Hz.  Can be: 13, 26, 52, 104, 208, 416, 833, 1666, 3332, 6664, 13330
+  empirical_odr = IMU.settings.accelSampleRate;  // best guess at the start
   IMU.settings.accelBandWidth = 400;  //Hz.  Can be: 50, 100, 200, 400;
   IMU.settings.accelFifoEnabled = 1;  //Set to include accelerometer in the FIFO
   IMU.settings.accelFifoDecimation = 1;  //set 1 for on /1
   IMU.settings.tempEnabled = 1;
   
-    //Non-basic mode settings
+  //Non-basic mode settings
   IMU.settings.commMode = 1;
 
   //FIFO control settings
@@ -58,32 +64,72 @@ void setup( void ) {
 
 
 void loop()
-{
-  float temp;  //This is to hold read data
+{ 
+  int time_index;
+  int sample_index;
+
+  float time_watermark;
+  float ts;
+  float acc_x; 
+  float acc_y; 
+  float acc_z; 
+
   uint16_t tempUnsigned;
   
-  while( ( IMU.fifoGetStatus() & 0x8000 ) == 0 ) {};  //Wait for watermark
+  // Wait for watermark
+  while( ( IMU.fifoGetStatus() & 0x8000 ) == 0 ) { };
+  
+  // get time when the watermark was reached
+  time_watermark = millis() / 1000;
+
+  // heuristic to get proper sampling frequency / ODR
+  // This is a heuristic, because difference between watermarks does not cover the same 
+  // interval as the counted amount of samples. However, both are periodic and quite stable.
+  if ( previous_read_samples ) {
+    empirical_odr = previous_read_samples / (time_watermark - previous_time_watermark);
+  }
  
   //Now loop until FIFO is empty.  NOTE:  As the FIFO is only 8 bits wide,
   //the channels must be synchronized to a known position for the data to align
   //properly.  Emptying the fifo is one way of doing this (this example)
+
+  // oldest entry in buffer is i * dt old
+  time_index = - IMU.settings.fifoThreshold / 3;  // three axis stored in fifo
+  sample_index = 0;
+
+  Serial.print(time_watermark);
+  Serial.print(", empirical ODR: ");
+  Serial.print(empirical_odr);
+  Serial.print("\n");
+
   while( ( IMU.fifoGetStatus() & 0x1000 ) == 0 ) {
 
-  temp = IMU.calcAccel(IMU.fifoRead());
-  Serial.print(temp);
-  Serial.print(",");
+    //ts = (float)i / empirical_odr;  // time delta to time_watermark in [s]
+    ts = time_watermark + (float)time_index / empirical_odr;  // "absolute time" [s]
+    acc_x = IMU.calcAccel(IMU.fifoRead());
+    acc_y = IMU.calcAccel(IMU.fifoRead());
+    acc_z = IMU.calcAccel(IMU.fifoRead());
 
-  temp = IMU.calcAccel(IMU.fifoRead());
-  Serial.print(temp);
-  Serial.print(",");
-
-  temp = IMU.calcAccel(IMU.fifoRead());
-  Serial.print(temp);
-  Serial.print("\n");
-  
-  delay(10); //Wait for the serial buffer to clear (~50 bytes worth of time @ 57600baud)
-  
+    Serial.print(time_index);
+    Serial.print(",");
+    Serial.print(ts);
+    Serial.print(",");
+    Serial.print(acc_x);
+    Serial.print(",");
+    Serial.print(acc_y);
+    Serial.print(",");
+    Serial.print(acc_z);
+    Serial.print("\n");
+    
+    time_index++;
+    sample_index++;
+    delay(10); //Wait for the serial buffer to clear (~50 bytes worth of time @ 57600baud)
+    
   }
+
+  // prepare next loop-cycle
+  previous_read_samples = sample_index;
+  previous_time_watermark = time_watermark;
 
   tempUnsigned = IMU.fifoGetStatus();
   Serial.print("\nFifo Status 1 and 2 (16 bits): 0x");
