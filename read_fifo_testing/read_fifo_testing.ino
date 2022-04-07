@@ -1,6 +1,7 @@
 #include "SparkFunLSM6DS3.h"
 #include "Wire.h"
 #include "SPI.h"
+#include "ArduinoJson.h"
 
 LSM6DS3 IMU(I2C_MODE, 0x6A);
 
@@ -67,18 +68,22 @@ void loop()
   int sample_index;
 
   float time_watermark;
-  float ts;
-  float acc_x;
-  float acc_y;
-  float acc_z;
 
-  float data[IMU.settings.fifoThreshold][4];
+  DynamicJsonDocument doc(2048);
+  JsonArray ts = doc.createNestedArray("ts");
+  JsonArray acc_x = doc.createNestedArray("acc_x");
+  JsonArray acc_y = doc.createNestedArray("acc_y");
+  JsonArray acc_z = doc.createNestedArray("acc_z");
+
   uint16_t tempUnsigned;
 
   // Wait for watermark
   while ((IMU.fifoGetStatus() & 0x8000) == 0)
   {
   };
+
+  // turn LED on
+  digitalWrite(LED_BUILTIN, HIGH);
 
   // get time when the watermark was reached
   time_watermark = (float)millis() / 1000;
@@ -95,7 +100,7 @@ void loop()
   // the channels must be synchronized to a known position for the data to align
   // properly.  Emptying the fifo is one way of doing this (this example)
 
-  // oldest entry in buffer is i * dt old
+  // oldest entry in buffer is (time_index * empirical_odr) old
   time_index = -IMU.settings.fifoThreshold / 3; // three axis stored in fifo
   sample_index = 0;
 
@@ -106,30 +111,27 @@ void loop()
 
   while ((IMU.fifoGetStatus() & 0x1000) == 0)
   {
-    // ts = (float)i / empirical_odr;  // time delta to time_watermark in [s]
-    ts = time_watermark + (float)time_index / empirical_odr; // "absolute time" [s]
-    acc_x = IMU.calcAccel(IMU.fifoRead());
-    acc_y = IMU.calcAccel(IMU.fifoRead());
-    acc_z = IMU.calcAccel(IMU.fifoRead());
-
-    data[sample_index][0] = ts;
-    data[sample_index][1] = acc_x;
-    data[sample_index][2] = acc_y;
-    data[sample_index][3] = acc_z;
-
-    // Serial.print(ts);
-    // Serial.print(",");
-    // Serial.print(acc_x);
-    // Serial.print(",");
-    // Serial.print(acc_y);
-    // Serial.print(",");
-    // Serial.print(acc_z);
-    // Serial.print("\n");
-    // delay(10); // Wait for the serial buffer to clear (~50 bytes worth of time @ 57600baud)
+    // ts.add( (float)time_index / empirical_odr );  // time delta to time_watermark in [s]
+    ts.add(time_watermark + (float)time_index / empirical_odr);  // "absolute time" [s]
+    acc_x.add(IMU.calcAccel(IMU.fifoRead()));
+    acc_y.add(IMU.calcAccel(IMU.fifoRead()));
+    acc_z.add(IMU.calcAccel(IMU.fifoRead()));
 
     time_index++;
     sample_index++;
   }
+
+  // print readings
+  Serial.print("Size of JSON-object: ");
+  Serial.print((unsigned long)measureJson(doc));
+  Serial.print("\n)");
+  serializeJson(doc, Serial);
+
+  // send readings via MQTT
+  // mqttClient.beginMessage(topic, (unsigned long)measureJson(doc));
+  // serializeJson(doc, mqttClient);
+  // mqttClient.endMessage();
+
 
   // prepare next loop-cycle
   previous_read_samples = sample_index;
@@ -139,4 +141,5 @@ void loop()
   Serial.print("\nFifo Status 1 and 2 (16 bits): 0x");
   Serial.println(tempUnsigned, HEX);
   Serial.print("\n");
+  digitalWrite(LED_BUILTIN, LOW);
 }
