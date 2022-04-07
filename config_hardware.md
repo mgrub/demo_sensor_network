@@ -53,8 +53,8 @@ arduino-cli: <https://arduino.github.io/arduino-cli/0.21/commands/arduino-cli_co
 # Arduino Nano 33 IoT requirement
 .\arduino-cli.exe core install arduino:samd
 
-# WifiNINA, LSM6DS3 Accelerometer, MQTT libraries
-.\arduino-cli.exe lib install WiFiNINA Arduino_LSM6DS3 ArduinoMqttClient
+# WifiNINA, LSM6DS3 Accelerometer, MQTT, JSON libraries
+.\arduino-cli.exe lib install WiFiNINA SparkFun_LSM6DS3_Breakout ArduinoMqttClient ArduinoJson
 ```
 
 path: C:\Users\gruber04\Downloads\arduino-cli_0.21.1_Windows_64bit\arduino-cli.exe
