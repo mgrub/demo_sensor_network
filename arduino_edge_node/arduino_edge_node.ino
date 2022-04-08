@@ -5,7 +5,9 @@
 #include "ArduinoJson.h"
 #include "ArduinoMqttClient.h"
 #include "WiFiNINA.h"
+
 #include "arduino_secrets.h"
+#include "sensor_1.h"
 
 // global variables for wifi
 char wifi_ssid[] = WIFI_SSID;
@@ -17,7 +19,9 @@ char mqtt_user[] = MQTT_USER;
 char mqtt_pass[] = MQTT_PASS;
 const char mqtt_broker[] = MQTT_BROKER;
 int mqtt_port = MQTT_PORT;
-const char mqtt_topic[] = MQTT_TOPIC;
+const char mqtt_data_topic[] = MQTT_DATA_TOPIC;
+const char mqtt_description_topic[] = MQTT_DESCRIPTION_TOPIC;
+const char sensor_self_description[] = SENSOR_SELF_DESCRIPTION;
 MqttClient mqttClient(wifiClient);
 
 // define I2C address of accelerometer
@@ -86,6 +90,13 @@ void setup(void)
   }
   IMU.fifoBegin(); // start the FIFO
   IMU.fifoClear(); // clear to sync all registers
+
+  // broadcast self description
+  mqttClient.beginMessage(mqtt_description_topic, true); // true -> message will be retained
+  mqttClient.print(sensor_self_description);
+  mqttClient.endMessage();
+
+  // finish setup
   Serial.print("Setup done!\n");
 }
 
@@ -150,7 +161,7 @@ void loop()
   serializeJson(doc, Serial);
 
   // send readings via MQTT
-  mqttClient.beginMessage(mqtt_topic, (unsigned long)measureJson(doc));
+  mqttClient.beginMessage(mqtt_data_topic, (unsigned long)measureJson(doc));
   serializeJson(doc, mqttClient);
   mqttClient.endMessage();
 
