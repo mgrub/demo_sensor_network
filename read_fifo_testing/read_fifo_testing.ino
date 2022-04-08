@@ -1,18 +1,67 @@
-#include "SparkFunLSM6DS3.h"
 #include "Wire.h"
 #include "SPI.h"
-#include "ArduinoJson.h"
+#include "SparkFunLSM6DS3.h"
 
+#include "ArduinoJson.h"
+#include "ArduinoMqttClient.h"
+#include "WiFiNINA.h"
+#include "arduino_secrets.h"
+
+// global variables for wifi
+char wifi_ssid[] = WIFI_SSID;
+char wifi_pass[] = WIFI_PASS;
+WiFiClient wifiClient;
+
+// global variables for mqtt
+char mqtt_user[] = MQTT_USER;
+char mqtt_pass[] = MQTT_PASS;
+const char mqtt_broker[] = MQTT_BROKER;
+int mqtt_port = MQTT_PORT;
+const char mqtt_topic[] = MQTT_TOPIC;
+MqttClient mqttClient(wifiClient);
+
+// define I2C address of accelerometer
 LSM6DS3 IMU(I2C_MODE, 0x6A);
 
-// evaluation of actual output data rate
+// global variables to evaluate actual output data rate
 float empirical_odr = 0;
 float previous_time_watermark = 0.0;
 int previous_read_samples = 0;
 
 void setup(void)
 {
-  // Over-ride default settings if desired
+
+  // setup serial interface
+  Serial.begin(57600); // start serial for output
+  delay(1000);         // relax
+
+  // setup WIFI
+  Serial.print("Attempting to connect to WPA SSID: ");
+  Serial.println(wifi_ssid);
+  while (WiFi.begin(wifi_ssid, wifi_pass) != WL_CONNECTED)
+  {
+    // failed, retry
+    Serial.print(".");
+    delay(5000);
+  }
+  Serial.println("Connected.\n\n");
+
+  // setup MQTT
+  Serial.print("Attempting to connect to the MQTT broker: ");
+  Serial.println(mqtt_broker);
+  mqttClient.setUsernamePassword(mqtt_user, mqtt_pass);
+
+  if (!mqttClient.connect(mqtt_broker, mqtt_port))
+  {
+    Serial.print("MQTT connection failed! Error code = ");
+    Serial.println(mqttClient.connectError());
+
+    while (1)
+      ;
+  }
+  Serial.println("Connected.\n\n");
+
+  // setup IMU + FIFO
   IMU.settings.gyroEnabled = 0;     // Can be 0 or 1
   IMU.settings.gyroFifoEnabled = 0; // Set to include gyro in FIFO
 
@@ -25,41 +74,19 @@ void setup(void)
   IMU.settings.accelFifoDecimation = 1;         // set 1 for on /1
   IMU.settings.tempEnabled = 1;
 
-  // Non-basic mode settings
-  IMU.settings.commMode = 1;
+  IMU.settings.commMode = 1; // Non-basic mode settings
 
-  // FIFO control settings
   IMU.settings.fifoThreshold = 100; // Can be 0 to 4096 (16 bit bytes)
   IMU.settings.fifoSampleRate = 50; // Hz.  Can be: 10, 25, 50, 100, 200, 400, 800, 1600, 3300, 6600
-  IMU.settings.fifoModeWord = 6;    // FIFO mode.
-  // FIFO mode.  Can be:
-  //   0 (Bypass mode, FIFO off)
-  //   1 (Stop when full)
-  //   3 (Continuous during trigger)
-  //   4 (Bypass until trigger)
-  //   6 (Continous mode)
+  IMU.settings.fifoModeWord = 6;    // FIFO mode: 0 off, 1 stop when full, 3 continuous during trigger, 4 bypass until trigger, 6 continouos
 
-  Serial.begin(57600); // start serial for output
-  delay(1000);         // relax...
-  Serial.println("Processor came out of reset.\n");
-
-  // Call .begin() to configure the IMUs
   if (IMU.begin() != 0)
   {
     Serial.println("Problem starting the IMU.");
   }
-  else
-  {
-    Serial.println("IMU started.");
-  }
-
-  Serial.print("Configuring FIFO with no error checking...");
-  IMU.fifoBegin();
-  Serial.print("Done!\n");
-
-  Serial.print("Clearing out the FIFO...");
-  IMU.fifoClear();
-  Serial.print("Done!\n");
+  IMU.fifoBegin(); // start the FIFO
+  IMU.fifoClear(); // clear to sync all registers
+  Serial.print("Setup done!\n");
 }
 
 void loop()
@@ -74,8 +101,6 @@ void loop()
   JsonArray acc_x = doc.createNestedArray("acc_x");
   JsonArray acc_y = doc.createNestedArray("acc_y");
   JsonArray acc_z = doc.createNestedArray("acc_z");
-
-  uint16_t tempUnsigned;
 
   // Wait for watermark
   while ((IMU.fifoGetStatus() & 0x8000) == 0)
@@ -96,10 +121,6 @@ void loop()
     empirical_odr = previous_read_samples / (time_watermark - previous_time_watermark);
   }
 
-  // Now loop until FIFO is empty.  NOTE:  As the FIFO is only 8 bits wide,
-  // the channels must be synchronized to a known position for the data to align
-  // properly.  Emptying the fifo is one way of doing this (this example)
-
   // oldest entry in buffer is (time_index * empirical_odr) old
   time_index = -IMU.settings.fifoThreshold / 3; // three axis stored in fifo
   sample_index = 0;
@@ -109,10 +130,11 @@ void loop()
   Serial.print(empirical_odr);
   Serial.print("\n");
 
+  // loop until FIFO is empty
   while ((IMU.fifoGetStatus() & 0x1000) == 0)
   {
     // ts.add( (float)time_index / empirical_odr );  // time delta to time_watermark in [s]
-    ts.add(time_watermark + (float)time_index / empirical_odr);  // "absolute time" [s]
+    ts.add(time_watermark + (float)time_index / empirical_odr); // "absolute time" [s]
     acc_x.add(IMU.calcAccel(IMU.fifoRead()));
     acc_y.add(IMU.calcAccel(IMU.fifoRead()));
     acc_z.add(IMU.calcAccel(IMU.fifoRead()));
@@ -128,18 +150,16 @@ void loop()
   serializeJson(doc, Serial);
 
   // send readings via MQTT
-  // mqttClient.beginMessage(topic, (unsigned long)measureJson(doc));
-  // serializeJson(doc, mqttClient);
-  // mqttClient.endMessage();
-
+  mqttClient.beginMessage(mqtt_topic, (unsigned long)measureJson(doc));
+  serializeJson(doc, mqttClient);
+  mqttClient.endMessage();
 
   // prepare next loop-cycle
   previous_read_samples = sample_index;
   previous_time_watermark = time_watermark;
 
-  tempUnsigned = IMU.fifoGetStatus();
   Serial.print("\nFifo Status 1 and 2 (16 bits): 0x");
-  Serial.println(tempUnsigned, HEX);
+  Serial.println(IMU.fifoGetStatus(), HEX);
   Serial.print("\n");
   digitalWrite(LED_BUILTIN, LOW);
 }
