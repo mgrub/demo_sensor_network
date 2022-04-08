@@ -42,6 +42,5 @@
 
 ## Open Questions
 
-- timestamps
+- absolute timestamps
 - max. achievable sample rate / transfer rate
-- read FIFO buffer
