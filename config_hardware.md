@@ -25,9 +25,73 @@ pw: strawberry
 
 ...
 
-### Adhoc Wifi
+### access point Wifi + NAT for internet over eth0
 
-...
+sudo apt install dnsmasq hostapd iptables
+
+/etc/dhcpcd.conf (add at the end)
+```
+interface wlan0
+static ip_address=192.168.1.1/24
+nohook wpa_supplicant
+```
+
+/etc/dnsmasq.conf (create/overwrite/old config saved)
+```
+interface=wlan0
+no-dhcp-interface=eth0
+dhcp-range=192.168.1.100,192.168.1.200,255.255.255.0,24h
+dhcp-option=option:dns-server,192.168.1.1
+```
+
+/etc/hostapd/hostapd.conf (create/overwrite)
+```
+interface=wlan0
+#driver=nl80211
+
+# general config
+ssid=MQTTbrokerWifi
+channel=1
+hw_mode=g
+ieee80211n=1
+ieee80211d=1
+country_code=DE
+wmm_enabled=1
+
+# encryption
+auth_algs=1
+wpa=2
+wpa_key_mgmt=WPA-PSK
+rsn_pairwise=CCMP
+wpa_passphrase=mqtt_broker
+```
+
+/etc/default/hostapd (append at end)
+```
+RUN_DAEMON=yes
+DAEMON_CONF="/etc/hostapd/hostapd.conf"
+```
+
+```
+sudo systemctl unmask hostapd
+sudo systemctl start hostapd
+sudo systemctl enable hostapd
+```
+
+/etc/sysctl.conf (uncomment this line)
+```
+net.ipv4.ip_forward=1
+```
+
+```
+sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+```
+
+/etc/rc.local (before line with "exit 0")
+```
+iptables-restore < /etc/iptables.ipv4.nat
+```
 
 ### MQTT broker
 
