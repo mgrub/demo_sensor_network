@@ -15,7 +15,7 @@ default packages: git ssh vim python3
 
 host: mqttbroker
 user: pi
-pw: digi
+pw: strawberry
 
 ### GPS timing
 
@@ -32,6 +32,14 @@ pw: digi
 ### MQTT broker
 
 sudo apt-get mosquitto
+
+/etc/mosquitto/conf.d/broker.conf:
+...
+
+mosquitto_pwgen -c /etc/mosquitto/pwfile.broker default
+
+user: default
+password: mosquitto
 
 ## Arduino
 
