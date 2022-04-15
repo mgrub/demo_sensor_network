@@ -23,9 +23,46 @@ pw: strawberry
 
 ### NTP server
 
-...
+sudo apt-get install pps-tools ntp
+
+
+/boot/config.txt (add the following lines)
+
+```
+# enable gps time signal (pps)
+dtoverlay=pps-gpio
+```
+
+/etc/modules (add the following line)
+
+```
+pps-gpio
+```
+
+sudo reboot
+
+
+/etc/ntp.conf (add?)
+
+```
+# pps-gpio /dev/pps0
+server 127.127.22.0 minpoll 4 maxpoll 4
+fudge 127.127.22.0 refid PPS
+
+# gpsd clock via shm
+server 127.127.28.0 minpoll 4 maxpoll 4 prefer
+fudge 127.127.28.0 time1 +0.130 refid GPS flag1 1
+```
 
 ### access point Wifi + NAT for internet over eth0
+
+#### synpopsis
+
+SSID: MQTTbrokerWifi
+pw: mqtt_broker
+host: 192.168.1.1
+
+#### setup
 
 sudo apt install dnsmasq hostapd iptables
 
