@@ -105,7 +105,7 @@ class NTPClientCustom {
     /**
      * @return time in seconds since Jan. 1, 1970
      */
-    unsigned long getEpochTime() const;
+    double getEpochTime() const;
 
     /**
      * Stops the underlying UDP client

@@ -106,13 +106,19 @@ bool NTPClientCustom::forceUpdate() {
 
   this->_udp->read(this->_packetBuffer, NTP_PACKET_SIZE);
 
-  unsigned long highWord = word(this->_packetBuffer[40], this->_packetBuffer[41]);
-  unsigned long lowWord = word(this->_packetBuffer[42], this->_packetBuffer[43]);
+  unsigned long highWord_seconds = word(this->_packetBuffer[40], this->_packetBuffer[41]);
+  unsigned long lowWord_seconds = word(this->_packetBuffer[42], this->_packetBuffer[43]);
+  
+  unsigned long highWord_fractions = word(this->_packetBuffer[44], this->_packetBuffer[45]);
+  unsigned long lowWord_fractions = word(this->_packetBuffer[46], this->_packetBuffer[47]);
+
   // combine the four bytes (two words) into a long integer
   // this is NTP time (seconds since Jan 1 1900):
-  unsigned long secsSince1900 = highWord << 16 | lowWord;
+  unsigned long secsSince1900 = highWord_seconds << 16 | lowWord_seconds;
+  // same for fractions of a seconds
+  unsigned long fracsSince1900 = highWord_fractions << 16 | lowWord_fractions;
 
-  this->_currentEpoc = secsSince1900 - SEVENZYYEARS;
+  this->_currentEpoc = (double)(secsSince1900 - SEVENZYYEARS) + (double)fracsSince1900 / pow(2,32);
 
   return true;  // return true after successful update
 }
@@ -130,38 +136,38 @@ bool NTPClientCustom::isTimeSet() const {
   return (this->_lastUpdate != 0); // returns true if the time has been set, else false
 }
 
-unsigned long NTPClientCustom::getEpochTime() const {
+double NTPClientCustom::getEpochTime() const {
   return this->_timeOffset + // User offset
          this->_currentEpoc + // Epoch returned by the NTP server
-         ((millis() - this->_lastUpdate) / 1000); // Time since last update
+         (((double)millis() - this->_lastUpdate) / 1000); // Time since last update
 }
 
-int NTPClientCustom::getDay() const {
-  return (((this->getEpochTime()  / 86400L) + 4 ) % 7); //0 is Sunday
-}
-int NTPClientCustom::getHours() const {
-  return ((this->getEpochTime()  % 86400L) / 3600);
-}
-int NTPClientCustom::getMinutes() const {
-  return ((this->getEpochTime() % 3600) / 60);
-}
-int NTPClientCustom::getSeconds() const {
-  return (this->getEpochTime() % 60);
-}
+// int NTPClientCustom::getDay() const {
+//   return (((this->getEpochTime()  / 86400L) + 4 ) % 7); //0 is Sunday
+// }
+// int NTPClientCustom::getHours() const {
+//   return ((this->getEpochTime()  % 86400L) / 3600);
+// }
+// int NTPClientCustom::getMinutes() const {
+//   return ((this->getEpochTime() % 3600) / 60);
+// }
+// int NTPClientCustom::getSeconds() const {
+//   return (this->getEpochTime() % 60);
+// }
+// 
+// String NTPClientCustom::getFormattedTime() const {
+//   unsigned long rawTime = this->getEpochTime();
+//   unsigned long hours = (rawTime % 86400L) / 3600;
+//   String hoursStr = hours < 10 ? "0" + String(hours) : String(hours);
 
-String NTPClientCustom::getFormattedTime() const {
-  unsigned long rawTime = this->getEpochTime();
-  unsigned long hours = (rawTime % 86400L) / 3600;
-  String hoursStr = hours < 10 ? "0" + String(hours) : String(hours);
+//   unsigned long minutes = (rawTime % 3600) / 60;
+//   String minuteStr = minutes < 10 ? "0" + String(minutes) : String(minutes);
 
-  unsigned long minutes = (rawTime % 3600) / 60;
-  String minuteStr = minutes < 10 ? "0" + String(minutes) : String(minutes);
+//   unsigned long seconds = rawTime % 60;
+//   String secondStr = seconds < 10 ? "0" + String(seconds) : String(seconds);
 
-  unsigned long seconds = rawTime % 60;
-  String secondStr = seconds < 10 ? "0" + String(seconds) : String(seconds);
-
-  return hoursStr + ":" + minuteStr + ":" + secondStr;
-}
+//   return hoursStr + ":" + minuteStr + ":" + secondStr;
+// }
 
 void NTPClientCustom::end() {
   this->_udp->stop();
