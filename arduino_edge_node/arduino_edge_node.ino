@@ -5,6 +5,8 @@
 #include "ArduinoJson.h"
 #include "ArduinoMqttClient.h"
 #include "WiFiNINA.h"
+#include "NTPClientCustom.h"
+#include "WiFiUdp.h"
 
 #include "arduino_secrets.h"
 #include "sensor_1.h"
@@ -24,12 +26,16 @@ const char mqtt_description_topic[] = MQTT_DESCRIPTION_TOPIC;
 const char sensor_self_description[] = SENSOR_SELF_DESCRIPTION;
 MqttClient mqttClient(wifiClient);
 
+// global variables for ntp
+WiFiUDP ntpUDP;
+NTPClientCustom timeClient(ntpUDP, MQTT_BROKER, 0, 60000); // offset, update interval
+
 // define I2C address of accelerometer
 LSM6DS3 IMU(I2C_MODE, 0x6A);
 
 // global variables to evaluate actual output data rate
 float empirical_odr = 0;
-float previous_time_watermark = 0.0;
+double previous_time_watermark = 0.0;
 int previous_read_samples = 0;
 
 void setup(void)
@@ -49,6 +55,10 @@ void setup(void)
     delay(5000);
   }
   Serial.println("Connected.\n\n");
+
+  // setup time synchronization
+  timeClient.begin();
+  previous_time_watermark = timeClient.getEpochTime();
 
   // setup MQTT
   Serial.print("Attempting to connect to the MQTT broker: ");
@@ -105,10 +115,12 @@ void loop()
   int time_index;
   int sample_index;
 
-  float time_watermark;
+  double time_watermark;
+  double time_epoch;
+
 
   DynamicJsonDocument doc(2048);
-  JsonArray ts = doc.createNestedArray("ts");
+  JsonArray ts = doc.createNestedArray("delta_ts");
   JsonArray acc_x = doc.createNestedArray("acc_x");
   JsonArray acc_y = doc.createNestedArray("acc_y");
   JsonArray acc_z = doc.createNestedArray("acc_z");
@@ -123,6 +135,8 @@ void loop()
 
   // get time when the watermark was reached
   time_watermark = (float)millis() / 1000;
+  time_epoch = timeClient.getEpochTime(); 
+  doc["timestamp_epoch"] = time_epoch;
 
   // heuristic to get proper sampling frequency / ODR
   // This is a heuristic, because difference between watermarks does not cover the same
@@ -136,7 +150,7 @@ void loop()
   time_index = -IMU.settings.fifoThreshold / 3; // three axis stored in fifo
   sample_index = 0;
 
-  Serial.print(time_watermark);
+  Serial.print(time_epoch);
   Serial.print(", empirical ODR: ");
   Serial.print(empirical_odr);
   Serial.print("\n");
@@ -144,8 +158,7 @@ void loop()
   // loop until FIFO is empty
   while ((IMU.fifoGetStatus() & 0x1000) == 0)
   {
-    // ts.add( (float)time_index / empirical_odr );  // time delta to time_watermark in [s]
-    ts.add(time_watermark + (float)time_index / empirical_odr); // "absolute time" [s]
+    ts.add((float)time_index / empirical_odr); // time delta to time_watermark in [s]
     acc_x.add(IMU.calcAccel(IMU.fifoRead()));
     acc_y.add(IMU.calcAccel(IMU.fifoRead()));
     acc_z.add(IMU.calcAccel(IMU.fifoRead()));
@@ -164,6 +177,9 @@ void loop()
   mqttClient.beginMessage(mqtt_data_topic, (unsigned long)measureJson(doc));
   serializeJson(doc, mqttClient);
   mqttClient.endMessage();
+
+  // update time (only done once every update_interval milli-seconds)
+  timeClient.update();
 
   // prepare next loop-cycle
   previous_read_samples = sample_index;
