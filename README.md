@@ -22,6 +22,7 @@ The repository documents:
 
 ## Communication Setup
 
+```ascii
 ┌───────────┐  ┌───────────┐  ┌───────────┐
 │ Arduino 1 │  │ Arduino 2 │  │ Arduino 3 │
 │           │  │           │  │           │
@@ -46,6 +47,7 @@ The repository documents:
       ┌───────┐     ┌────────────────┐
       │ Users │     │ Cloud-Services │
       └───────┘     └────────────────┘
+```
 
 ### MQTT topics
 
