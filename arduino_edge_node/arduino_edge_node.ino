@@ -37,7 +37,7 @@ NTPClientCustom timeClient(ntpUDP, MQTT_BROKER, 0, 60000); // offset, update int
 LSM6DS3 IMU(I2C_MODE, 0x6A);
 
 // global variables to evaluate actual output data rate
-float empirical_odr = 0;
+double empirical_odr = 0;
 double previous_time_watermark = 0.0;
 int previous_read_samples = 0;
 
@@ -121,7 +121,6 @@ void loop()
   double time_watermark;
   double time_epoch;
 
-
   DynamicJsonDocument doc(2048);
   JsonArray ts = doc.createNestedArray("delta_ts");
   JsonArray acc_x = doc.createNestedArray("acc_x");
@@ -137,8 +136,8 @@ void loop()
   digitalWrite(LED_BUILTIN, HIGH);
 
   // get time when the watermark was reached
-  time_watermark = (float)millis() / 1000;
-  time_epoch = timeClient.getEpochTime(); 
+  time_watermark = (double)millis() / 1000;
+  time_epoch = timeClient.getEpochTime();
   doc["timestamp_epoch"] = time_epoch;
 
   // heuristic to get proper sampling frequency / ODR
@@ -156,7 +155,7 @@ void loop()
   // loop until FIFO is empty
   while ((IMU.fifoGetStatus() & 0x1000) == 0)
   {
-    ts.add((float)time_index / empirical_odr); // time delta to time_watermark in [s]
+    ts.add((double)time_index / empirical_odr); // time delta to time_watermark in [s]
     acc_x.add(IMU.calcAccel(IMU.fifoRead()));
     acc_y.add(IMU.calcAccel(IMU.fifoRead()));
     acc_z.add(IMU.calcAccel(IMU.fifoRead()));
@@ -196,5 +195,7 @@ void loop()
     Serial.println(IMU.fifoGetStatus(), HEX);
     Serial.print("\n");
   }
+
+  // turn LED off
   digitalWrite(LED_BUILTIN, LOW);
 }
