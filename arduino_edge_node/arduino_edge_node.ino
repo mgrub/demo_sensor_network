@@ -11,6 +11,9 @@
 #include "arduino_secrets.h"
 #include "sensor_1.h"
 
+// print messages also on serial interface
+bool verbose = true;
+
 // global variables for wifi
 char wifi_ssid[] = WIFI_SSID;
 char wifi_pass[] = WIFI_PASS;
@@ -150,11 +153,6 @@ void loop()
   time_index = -IMU.settings.fifoThreshold / 3; // three axis stored in fifo
   sample_index = 0;
 
-  Serial.print(time_epoch);
-  Serial.print(", empirical ODR: ");
-  Serial.print(empirical_odr);
-  Serial.print("\n");
-
   // loop until FIFO is empty
   while ((IMU.fifoGetStatus() & 0x1000) == 0)
   {
@@ -166,12 +164,6 @@ void loop()
     time_index++;
     sample_index++;
   }
-
-  // print readings
-  Serial.print("Size of JSON-object: ");
-  Serial.print((unsigned long)measureJson(doc));
-  Serial.print("\n");
-  serializeJson(doc, Serial);
 
   // send readings via MQTT
   mqttClient.beginMessage(mqtt_data_topic, (unsigned long)measureJson(doc));
@@ -185,8 +177,24 @@ void loop()
   previous_read_samples = sample_index;
   previous_time_watermark = time_watermark;
 
-  Serial.print("\nFifo Status 1 and 2 (16 bits): 0x");
-  Serial.println(IMU.fifoGetStatus(), HEX);
-  Serial.print("\n");
+  if (verbose)
+  {
+    // time + sample rate
+    Serial.print(time_epoch);
+    Serial.print(", empirical ODR: ");
+    Serial.print(empirical_odr);
+    Serial.print("\n");
+
+    // length and content of json object
+    Serial.print("Size of JSON-object: ");
+    Serial.print((unsigned long)measureJson(doc));
+    Serial.print("\n");
+    serializeJson(doc, Serial);
+
+    // fifo status
+    Serial.print("\nFifo Status 1 and 2 (16 bits): 0x");
+    Serial.println(IMU.fifoGetStatus(), HEX);
+    Serial.print("\n");
+  }
   digitalWrite(LED_BUILTIN, LOW);
 }
