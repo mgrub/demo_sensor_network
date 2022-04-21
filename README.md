@@ -1,46 +1,77 @@
-# Ideas for the Arduino Sensor Network
+# Sensor Network Demonstrator
 
-## Mechanical Setup
+This is the repository for a small sensor network demonstrator.
+It can be used to demonstrate various
+
+The repository documents:
+
+- hardware setup
+- communication setup
+- Arduino microcontroller code
+- Arduino programming environment
+- RaspberryPi setup
+
+## Hardware Setup
 
 - 3x Arduino Nano 33 IoT
-- mounted on a Y-shaped (wooden?) structure in the same orientation
+- 1x RaspberryPi 4
+- 1x Waveshare NEO-M8T GNSS TIMING HAT
+- power supply and mount for the Arduinos
+- power supply, case and fan for the RaspberryPi
+- 1x development PC
 
 ## Communication Setup
 
-### Windows
+┌───────────┐  ┌───────────┐  ┌───────────┐
+│ Arduino 1 │  │ Arduino 2 │  │ Arduino 3 │
+│           │  │           │  │           │
+│   - Wifi  │  │   - Wifi  │  │   - Wifi  │
+└────┬──────┘  └────┬──────┘  └────┬──────┘
+     │ ▲            │ ▲            │ ▲
+ MQTT│ │        MQTT│ │        MQTT│ │
+     │ │NTP         │ │NTP         │ │NTP
+     ▼ │            ▼ │            ▼ │
+┌──────┴──────────────┴──────────────┴────┐
+│ Raspberry Pi                            │
+│                                         │  Serial    ┌─────────────────┐
+│   - Wifi Accesspoint                    │◄───────────┤ GNSS satellites │
+│   - MQTT Broker                         │  Interface └─────────────────┘
+│   - NTP Server                          │
+└─────────┬───────────────────────────────┘
+          │                 ▲
+          │                 │
+      MQTT│             MQTT│
+          │                 │
+          ▼                 ▼
+      ┌───────┐     ┌────────────────┐
+      │ Users │     │ Cloud-Services │
+      └───────┘     └────────────────┘
 
-- connected to broker via wifi (via usb wifi dongle)
-- runs uncertainty service?
-- adapter to AgentMet4FoF?
+### MQTT topics
 
-### Arduino
+- each Arduino publishes to multiple MQTT topics
+  - <sensor_name>/data -> json
+  - <sensor_name>/description -> json 
 
-- connected to broker via wifi (via internal chipset)
-- each device published to MQTT topic
-  - <sensor_name>/data -> binary datastream / eclipse unide v3?
-  - <sensor_name>/description -> json-serialized RDF triples (retain message)
+## Useful Resources
 
-### Raspberry Pi
-
-- provides ad-hoc wifi (via internal chipset)
-- runs MQTT broker (mosquitto)
-- receives time via GPS
-- runs NTP server
-
-## Links
-
-- Broker: <http://mqtt-explorer.com/>
-- Visualization: <https://mosquitto.org/download/>
+- MQTT Visualizer: <http://mqtt-explorer.com/>
+- MQTT Broker: <https://mosquitto.org/download/>
 - MQTT Docs: <https://docs.arduino.cc/tutorials/uno-wifi-rev2/uno-wifi-r2-mqtt-device-to-device>
 - MQTT Tutorial: <https://community.element14.com/challenges-projects/design-challenges/design-for-a-cause-2021/b/blog/posts/connecting-the-arduino-nano-33-iot-with-local-mqtt-broker-2>
+
 - Acceleration Sensor Docs: <https://www.st.com/resource/en/datasheet/lsm6ds3tr-c.pdf> (page 36 -> FIFO mode)
-- Acceleration Sensor Library: <https://github.com/STMicroelectronics/STMems_Standard_C_drivers/tree/master/lsm6ds3_STdC/examples>
+- Unoffical Acceleration Sensor Library: <https://github.com/sparkfun/SparkFun_LSM6DS3_Arduino_Library>
+
 - NTP Library: <https://www.arduino.cc/reference/en/libraries/ntpclient/>
 - Adhoc Wifi: <https://www.elektronik-kompendium.de/sites/raspberry-pi/2002171.htm>
 - GPS USB NTP: <https://klenzel.de/4182>
 - GPS receiver doc: <https://www.waveshare.com/wiki/NEO-M8T_GNSS_TIMING_HAT>
 
-## Open Questions
+## Future Ideas
 
-- absolute timestamps
-- max. achievable sample rate / transfer rate
+- MQTT agent for AgentMet4FoF
+- test high sampling rates (500-1000 Hz)
+- adjust messages sent by Arduino (e.g. follow BMBF FAMOUS approach of eclipse unide)
+- adjust self-description message (to something more semantic like JSON-RDF-triples, currently only {"id": "sensor_1"})
+- include uncertainty service to add uncertainty based on self-description
