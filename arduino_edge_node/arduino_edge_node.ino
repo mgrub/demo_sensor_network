@@ -170,7 +170,7 @@ void loop()
   // print readings
   Serial.print("Size of JSON-object: ");
   Serial.print((unsigned long)measureJson(doc));
-  Serial.print("\n)");
+  Serial.print("\n");
   serializeJson(doc, Serial);
 
   // send readings via MQTT
