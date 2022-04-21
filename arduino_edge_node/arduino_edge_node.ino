@@ -138,7 +138,7 @@ void loop()
   // get time when the watermark was reached
   time_watermark = (double)millis() / 1000;
   time_epoch = timeClient.getEpochTime();
-  doc["timestamp_epoch"] = time_epoch;
+  doc["timestamp_epoch"] = serialized(String(time_epoch));  // to keep full double precision
 
   // heuristic to get proper sampling frequency / ODR
   // This is a heuristic, because difference between watermarks does not cover the same
