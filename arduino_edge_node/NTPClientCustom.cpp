@@ -139,7 +139,7 @@ bool NTPClientCustom::isTimeSet() const {
 double NTPClientCustom::getEpochTime() const {
   return this->_timeOffset + // User offset
          this->_currentEpoc + // Epoch returned by the NTP server
-         (((double)millis() - this->_lastUpdate) / 1000); // Time since last update
+         ((double)(millis() - this->_lastUpdate) / 1000); // Time since last update
 }
 
 // int NTPClientCustom::getDay() const {

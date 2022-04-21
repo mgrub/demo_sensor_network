@@ -20,7 +20,7 @@ class NTPClientCustom {
 
     unsigned long _updateInterval = 60000;  // In ms
 
-    unsigned long _currentEpoc    = 0;      // In s
+    double _currentEpoc    = 0;      // In s
     unsigned long _lastUpdate     = 0;      // In ms
 
     byte          _packetBuffer[NTP_PACKET_SIZE];
