@@ -12,7 +12,7 @@
 #include "sensor_1.h"
 
 // print messages also on serial interface
-bool verbose = true;
+bool verbose = false;
 
 // global variables for wifi
 char wifi_ssid[] = WIFI_SSID;
