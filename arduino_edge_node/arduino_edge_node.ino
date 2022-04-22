@@ -121,7 +121,7 @@ void loop()
   double time_watermark;
   double time_epoch;
 
-  DynamicJsonDocument doc(2048);
+  DynamicJsonDocument doc(4096);
   JsonArray ts = doc.createNestedArray("delta_ts");
   JsonArray acc_x = doc.createNestedArray("acc_x");
   JsonArray acc_y = doc.createNestedArray("acc_y");
@@ -145,7 +145,7 @@ void loop()
   // interval as the counted amount of samples. However, both are periodic and quite stable.
   if (previous_read_samples)
   {
-    empirical_odr = previous_read_samples / (time_watermark - previous_time_watermark);
+    empirical_odr = (double)previous_read_samples / (time_watermark - previous_time_watermark);
   }
 
   // oldest entry in buffer is (time_index * empirical_odr) old
