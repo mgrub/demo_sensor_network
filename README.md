@@ -64,15 +64,16 @@ The repository documents:
 - MQTT Tutorial: <https://community.element14.com/challenges-projects/design-challenges/design-for-a-cause-2021/b/blog/posts/connecting-the-arduino-nano-33-iot-with-local-mqtt-broker-2>
 
 - Acceleration Sensor Docs: <https://www.st.com/resource/en/datasheet/lsm6ds3tr-c.pdf> (page 36 -> FIFO mode)
-- Unoffical Acceleration Sensor Library: <https://github.com/sparkfun/SparkFun_LSM6DS3_Arduino_Library>
+- SparkFun Acceleration Sensor Library: <https://github.com/sparkfun/SparkFun_LSM6DS3_Arduino_Library>
 
 - NTP Library: <https://www.arduino.cc/reference/en/libraries/ntpclient/>
 - Adhoc Wifi: <https://www.elektronik-kompendium.de/sites/raspberry-pi/2002171.htm>
 - GPS USB NTP: <https://klenzel.de/4182>
 - GPS receiver doc: <https://www.waveshare.com/wiki/NEO-M8T_GNSS_TIMING_HAT>
 
-## Future Ideas
+## TODO / Future Ideas
 
+- fix time gap
 - MQTT agent for AgentMet4FoF
 - test high sampling rates (500-1000 Hz)
 - adjust messages sent by Arduino (e.g. follow BMBF FAMOUS approach of eclipse unide)
