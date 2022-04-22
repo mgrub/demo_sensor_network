@@ -1,7 +1,8 @@
 # Sensor Network Demonstrator
 
 This is the repository for a small sensor network demonstrator.
-It can be used to demonstrate various
+It can be used to demonstrate various aspects of the IoT like edge device/fog/cloud devices, data streams, sensor self-description, homogeneous/heterogeneous networks, absolute time synchronization and wireless sensor networks.
+To do so, it builds on existing standards (WIFI, MQTT, NTP, GPS, JSON) and uses off-the-shelf hardware.
 
 The repository documents:
 
