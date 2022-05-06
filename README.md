@@ -73,8 +73,7 @@ The repository documents:
 
 ## TODO / Future Ideas
 
-- fix time gap
-- MQTT agent for AgentMet4FoF
+- MQTT agent for AgentMet4FoF -> check out <https://github.com/PTB-M4D/thementag-demo>
 - test high sampling rates (500-1000 Hz)
 - adjust messages sent by Arduino (e.g. follow BMBF FAMOUS approach of eclipse unide)
 - adjust self-description message (to something more semantic like JSON-RDF-triples, currently only {"id": "sensor_1"})
