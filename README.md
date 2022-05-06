@@ -71,6 +71,26 @@ The repository documents:
 - GPS USB NTP: <https://klenzel.de/4182>
 - GPS receiver doc: <https://www.waveshare.com/wiki/NEO-M8T_GNSS_TIMING_HAT>
 
+## Security Setup
+
+### Network Level
+
+Wifi connections from and to the RaspberryPi / MQTT Broker are encrypted using WPA2.
+Thi effectively blocks attackers that do not have the Wifi credentials.
+
+Network level security could be increased further by whitelisting (MAC-addresses of) allowed devices.
+
+### Transport Level
+
+A username and password is required to read and write topics from the MQTT broker.
+However, the message transport itself is not encrypted.
+
+To enable transport encryption a TLS/SSL certificate needs to be issued for the MQTT broker.
+
+### Application Level
+
+The payload of the MQTT message is a non-encrypted JSON-string.
+
 ## TODO / Future Ideas
 
 - MQTT agent for AgentMet4FoF -> check out <https://github.com/PTB-M4D/thementag-demo>
