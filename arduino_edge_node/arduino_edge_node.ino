@@ -9,7 +9,7 @@
 #include "WiFiUdp.h"
 
 #include "arduino_secrets.h"
-#include "sensor_1.h"
+#include "sensor.h"
 
 // print messages also on serial interface
 bool verbose = false;
