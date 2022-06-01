@@ -148,6 +148,15 @@ password: mosquitto
 
 path: C:\Users\gruber04\Downloads\arduino-cli_0.21.1_Windows_64bit\arduino-cli.exe
 
+use python to compile+upload
+(this automatically generates the required sensor.h based on the input ttl-files)
+
+```powershell
+python arduino_edge_node/compile_and_upload.py
+```
+
+### legacy
+
 compile + upload
 
 ```powershell
