@@ -4,13 +4,13 @@
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix scal: <http://www.example.com/ns/scal/> .
-@prefix : <http://www.example.com/ns/sensor_1/> .
+@prefix : <http://www.example.com/ns/sensor_3/> .
 
 :sensor
     a sosa:Sensor;
-    sosa:isHostedBy :location_A;
+    sosa:isHostedBy :location_C;
     sosa:observes (:acceleration_x :acceleration_y :acceleration_z);
-    ssn:hasProperty :model_S1 .
+    ssn:hasProperty :model_S3 .
 
 # if an observation was made by this sensor, it has the unit 'm/s^2'
 :uses_unit 
@@ -39,5 +39,5 @@
     a sosa:ObservableProperty , om:Quantity;
     om:hasDimension om:acceleration-Dimension .
 
-:location_A 
+:location_C 
     rdf:type owl:NamedIndividual , scal:Location .
