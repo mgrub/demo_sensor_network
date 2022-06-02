@@ -173,11 +173,12 @@ compile + upload
 arduino-cli: <https://arduino.github.io/arduino-cli/0.21/commands/arduino-cli_config_set/>
 
 ```powershell
-.\arduino-cli.exe config set network.proxy https://webproxy.bs.ptb.de:8080
+.\arduino-cli.exe config init
+.\arduino-cli.exe config set network.proxy http://webproxy.bs.ptb.de:8080
 
 # Arduino Nano 33 IoT requirement
 .\arduino-cli.exe core install arduino:samd
 
 # WifiNINA, LSM6DS3 Accelerometer, MQTT, JSON libraries
-.\arduino-cli.exe lib install WiFiNINA SparkFun_LSM6DS3_Breakout ArduinoMqttClient ArduinoJson
+.\arduino-cli.exe lib install WiFiNINA "SparkFun LSM6DS3 Breakout" ArduinoMqttClient ArduinoJson
 ```
