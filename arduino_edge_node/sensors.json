@@ -1,14 +1,14 @@
 {
     "sensor_1": {
-        "port": "COM4",
+        "port": "/dev/ttyACM0",
         "description_file": "arduino_edge_node/sensor_1.ttl"
     },
     "sensor_2": {
-        "port": "COM7",
+        "port": "/dev/ttyACM1",
         "description_file": "arduino_edge_node/sensor_2.ttl"
     },
     "sensor_3": {
-        "port": "COM8",
+        "port": "/dev/ttyACM2",
         "description_file": "arduino_edge_node/sensor_3.ttl"
     }
 }
