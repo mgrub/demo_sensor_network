@@ -4,14 +4,14 @@ import shlex
 import json
 
 # paths windows
-#arduino_cli_path = "C:\\Users\\gruber04\\Downloads\\arduino-cli_0.21.1_Windows_64bit\\arduino-cli.exe"
-#work_dir = ".\\arduino_edge_node\\"
-#posix = False
+arduino_cli_path = "C:\\Users\\gruber04\\Downloads\\arduino-cli_0.21.1_Windows_64bit\\arduino-cli.exe"
+work_dir = ".\\arduino_edge_node\\"
+posix = False
 
 # paths linux
-arduino_cli_path = os.path.expanduser("~/programs/arduino-cli_0.22.0_Linux_64bit/arduino-cli")
-work_dir = "./arduino_edge_node/"
-posix = True
+# arduino_cli_path = os.path.expanduser("~/programs/arduino-cli_0.22.0_Linux_64bit/arduino-cli")
+# work_dir = "./arduino_edge_node/"
+# posix = True
 
 # commands
 compilation = "{EXE} compile -b arduino:samd:nano_33_iot {WORK_DIR}"
@@ -31,7 +31,7 @@ for sensor_id, settings in sensors_to_work_with.items():
     if os.path.exists(settings["description_file"]):
         with open(settings["description_file"], "r") as f:
             sensor_description = f.read()
-            sensor_description = sensor_description.replace("\n", " \\\n")
+            sensor_description = sensor_description.replace("\n", " \\n")
     else:
         continue
 
