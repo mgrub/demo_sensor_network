@@ -8,30 +8,24 @@
 #include "NTPClientCustom.h"
 #include "WiFiUdp.h"
 
+// load secrets and sensor self description classes
 #include "arduino_secrets.h"
 #include "sensor.h"
+ArduinoSecrets secrets;
+SensorConfig sconf;
 
 // print messages also on serial interface
 bool verbose = false;
 
-// global variables for wifi
-char wifi_ssid[] = WIFI_SSID;
-char wifi_pass[] = WIFI_PASS;
+// init WIFI client
 WiFiClient wifiClient;
 
-// global variables for mqtt
-char mqtt_user[] = MQTT_USER;
-char mqtt_pass[] = MQTT_PASS;
-const char mqtt_broker[] = MQTT_BROKER;
-int mqtt_port = MQTT_PORT;
-const char mqtt_data_topic[] = MQTT_DATA_TOPIC;
-const char mqtt_description_topic[] = MQTT_DESCRIPTION_TOPIC;
-const char sensor_self_description[] = SENSOR_SELF_DESCRIPTION;
+// init MQTT client
 MqttClient mqttClient(wifiClient);
 
 // global variables for ntp
 WiFiUDP ntpUDP;
-NTPClientCustom timeClient(ntpUDP, MQTT_BROKER, 0, 60000); // offset, update interval
+NTPClientCustom timeClient(ntpUDP, secrets.mqtt_broker, 0, 60000); // offset, update interval
 
 // define I2C address of accelerometer
 LSM6DS3 IMU(I2C_MODE, 0x6A);
@@ -50,8 +44,8 @@ void setup(void)
 
   // setup WIFI
   Serial.print("Attempting to connect to WPA SSID: ");
-  Serial.println(wifi_ssid);
-  while (WiFi.begin(wifi_ssid, wifi_pass) != WL_CONNECTED)
+  Serial.println(secrets.wifi_ssid);
+  while (WiFi.begin(secrets.wifi_ssid, secrets.wifi_pass) != WL_CONNECTED)
   {
     // failed, retry
     Serial.print(".");
@@ -65,10 +59,10 @@ void setup(void)
 
   // setup MQTT
   Serial.print("Attempting to connect to the MQTT broker: ");
-  Serial.println(mqtt_broker);
-  mqttClient.setUsernamePassword(mqtt_user, mqtt_pass);
+  Serial.println(secrets.mqtt_broker);
+  mqttClient.setUsernamePassword(secrets.mqtt_user, secrets.mqtt_pass);
 
-  if (!mqttClient.connect(mqtt_broker, mqtt_port))
+  if (!mqttClient.connect(secrets.mqtt_broker, secrets.mqtt_port))
   {
     Serial.print("MQTT connection failed! Error code = ");
     Serial.println(mqttClient.connectError());
@@ -105,8 +99,8 @@ void setup(void)
   IMU.fifoClear(); // clear to sync all registers
 
   // broadcast self description
-  mqttClient.beginMessage(mqtt_description_topic, true); // true -> message will be retained
-  mqttClient.print(sensor_self_description);
+  mqttClient.beginMessage(sconf.mqtt_description_topic, true); // true -> message will be retained
+  mqttClient.print(sconf.sensor_self_description);
   mqttClient.endMessage();
 
   // finish setup
@@ -165,7 +159,7 @@ void loop()
   }
 
   // send readings via MQTT
-  mqttClient.beginMessage(mqtt_data_topic, (unsigned long)measureJson(doc));
+  mqttClient.beginMessage(sconf.mqtt_data_topic, (unsigned long)measureJson(doc));
   serializeJson(doc, mqttClient);
   mqttClient.endMessage();
 

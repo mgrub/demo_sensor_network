@@ -1,8 +1,12 @@
-#define WIFI_SSID "Wifi Name"
-#define WIFI_PASS "00001111222233334444"
+class ArduinoSecrets
+{
+public:
+    const char wifi_ssid[50] = "Wifi Name";
+    const char wifi_pass[50] = "00001111222233334444";
 
-#define MQTT_USER "mqttuser"
-#define MQTT_PASS "secret_password"
+    const char mqtt_user[50] = "mqttuser";
+    const char mqtt_pass[50] = "secret_password";
 
-#define MQTT_BROKER "mqttbroker.example.org"
-#define MQTT_PORT 1883
+    const char mqtt_broker[100] = "mqttbroker.example.org";
+    const int mqtt_port = 1883;
+};
