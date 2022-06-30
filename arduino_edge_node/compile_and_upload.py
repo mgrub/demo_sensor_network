@@ -31,7 +31,7 @@ for sensor_id, settings in sensors_to_work_with.items():
     if os.path.exists(settings["description_file"]):
         with open(settings["description_file"], "r") as f:
             sensor_description = f.read()
-            sensor_description = sensor_description.replace("\n", " \\\n")
+            #sensor_description = sensor_description.replace("\n", " \\\n")
     else:
         continue
 

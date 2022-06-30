@@ -99,7 +99,7 @@ void setup(void)
   IMU.fifoClear(); // clear to sync all registers
 
   // broadcast self description
-  mqttClient.beginMessage(sconf.mqtt_description_topic, true); // true -> message will be retained
+  mqttClient.beginMessage(sconf.mqtt_description_topic, sconf.sensor_self_description.length(), true); // true -> message will be retained
   mqttClient.print(sconf.sensor_self_description);
   mqttClient.endMessage();
 

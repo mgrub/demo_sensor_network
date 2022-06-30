@@ -3,5 +3,5 @@ class SensorConfig
 public:
     const char mqtt_data_topic[100] = "sensors/{SENSOR_ID}/data";
     const char mqtt_description_topic[100] = "sensors/{SENSOR_ID}/description";
-    const char sensor_self_description[10000] = R"###({SENSOR_DESCRIPTION})###";
+    String sensor_self_description = R"###({SENSOR_DESCRIPTION})###";
 }};
