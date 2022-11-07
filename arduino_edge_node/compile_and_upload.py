@@ -4,7 +4,7 @@ import shlex
 import json
 
 # paths windows
-arduino_cli_path = "C:\\Users\\gruber04\\Downloads\\arduino-cli_0.21.1_Windows_64bit\\arduino-cli.exe"
+arduino_cli_path = "C:\\Users\\gruber04\\programs\\arduino-cli_0.21.1_Windows_64bit\\arduino-cli.exe"
 work_dir = ".\\arduino_edge_node\\"
 posix = False
 
