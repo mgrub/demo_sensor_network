@@ -20,7 +20,8 @@
     sosa:observes (local:acceleration_x local:acceleration_y local:acceleration_z);
     ssn:hasProperty :model .
 
-# if an observation was made by this sensor, it has the unit 'm/s^2'
+
+# if an observation was made by this sensor, it has the unit 'one' (relative earths gravitiational acceleration)
 :uses_unit 
     a owl:Class;
     owl:unionOf (
@@ -31,7 +32,7 @@
         ]
         [a owl:Restriction;
             owl:onProperty om:hasUnit;
-            owl:hasValue om:metrePerSecond-TimeSquared
+            owl:hasValue om:one
         ]
     ) .
 
@@ -47,12 +48,39 @@ local:acceleration_z
     a owl:NamedIndividual , sosa:ObservableProperty , om:Quantity;
     om:hasDimension om:acceleration-Dimension .
 
-local:location_C
+local:location_A 
     rdf:type owl:NamedIndividual , scal:Location .
 
-:calibrationPeriod rdf:type ssn-system:Condition ;
-	schema:startDate "1970-01-01T00:00"^^xsd:dateTime ;
-	schema:endDate "1970-01-01T00:00"^^xsd:dateTime .
+# calibration model
+:gain rdf:type scal:Parameter ;
+	om:hasNumericalValue 0.10193 ;
+	om:hasUnit [
+        rdf:type om:UnitDivision ;
+        om:hasNumerator om:Second-TimeSquared ;
+        om:hasDenominator om:metre
+    ] ;
+	scal:hasUncertainty [
+        rdf:type si:StandardUncertainty;
+	    si:hasNumericalValue 0.001039
+    ] .
 
-:model rdf:type owl:NamedIndividual , trans:InfiniteImpulseResponseModel;
+:offset rdf:type scal:Parameter ;
+	om:hasNumericalValue 0.0 ;
+	om:hasUnit om:one ;
+	scal:hasUncertainty [
+        rdf:type si:StandardUncertainty;
+	    si:hasNumericalValue 0.01019
+    ] .
+
+:equation rdf:type trans:GainOffsetNotation;
+	# y = a * x + b
+	trans:hasGain :gain ;
+	trans:hasOffset :offset .
+
+:calibrationPeriod rdf:type ssn-system:Condition ;
+	schema:startDate "2022-01-01T00:00"^^xsd:dateTime ;
+	schema:endDate "2026-12-31T23:59"^^xsd:dateTime .
+
+:model rdf:type owl:NamedIndividual , trans:LinearAffineModel;
+	trans:isExpressedBy :equation ;
 	ssn-system:inCondition :calibrationPeriod .
