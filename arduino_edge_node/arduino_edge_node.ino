@@ -115,7 +115,7 @@ void loop()
   double time_watermark;
   double time_epoch;
 
-  DynamicJsonDocument doc(4096);
+  DynamicJsonDocument doc(8192);
   JsonArray ts = doc.createNestedArray("delta_ts");
   JsonArray acc_x = doc.createNestedArray("acc_x");
   JsonArray acc_y = doc.createNestedArray("acc_y");
